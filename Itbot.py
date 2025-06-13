@@ -6,7 +6,6 @@ from telegram.ext import (
 
 TOKEN = os.environ.get("BOT_TOKEN")  # переменная окружения с токеном
 ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")  # ID администратора
- # твой Telegram user ID
 PORT = int(os.environ.get("PORT", "8443"))
 
 course_text = """
@@ -50,7 +49,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Сообщение пользователю
     await query.edit_message_text(
-        text=f"✅ Спасибо за интерес! Можете написать мне 👉 [@IT_StepUp](https://t.me/@IT_StepUp)",
+        text=f"✅ Спасибо за интерес! Можете написать мне 👉 [@IT_StepUp](https://t.me/IT_StepUp)",
         parse_mode='Markdown'
     )
 
@@ -60,7 +59,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text=f"✉️ Новый запрос от @{username} ({user.first_name}) хочет на курс!"
     )
 
+
 if __name__ == '__main__':
+    host = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '').strip()
+    print(f"RENDER_EXTERNAL_HOSTNAME: '{host}'")  # вывод для отладки
+
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
@@ -68,5 +71,5 @@ if __name__ == '__main__':
     app.run_webhook(
         listen="0.0.0.0",
         port=PORT,
-        webhook_url=f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME')}/webhook"
+        webhook_url=f"https://{host}/webhook"
     )
