@@ -5,49 +5,22 @@ from telegram.ext import (
     ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 )
 
-# Загружаем переменные из .env (если есть)
 load_dotenv()
 
 TOKEN = os.environ.get("BOT_TOKEN")
 ADMIN_CHAT_ID = int(os.environ.get("ADMIN_CHAT_ID"))
 PORT = int(os.environ.get("PORT", "8443"))
 
-# Получаем хост для webhook — на Render он выставляется автоматически,
-# для локальной отладки можно указать localhost
 HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
 if not HOST:
-    HOST = "localhost"  # Для локального запуска
+    HOST = "localhost"
 
-# Проверка на некорректные символы в HOST
 if '\n' in HOST or ' ' in HOST:
     raise ValueError(f"❌ Некорректный HOST: '{HOST}'")
 
 print(f"✅ Webhook URL: https://{HOST}/webhook")
 
-course_text = """
-🚀 *Летний курс по веб-разработке для подростков (13–16 лет)*  
-💻 Научись создавать сайты с нуля — живые уроки в классе!  
-🌟 IT — одна из самых востребованных профессий в мире!
-
-📍 *Занятия:* в компьютерной аудитории, за нашими ПК  
-🧑‍🏫 *Язык обучения:* русский, опытный преподаватель  
-🌐 HTML + CSS + VS Code + GitHub  
-📁 Создание мини-сайтов для портфолио  
-📡 Публикация проектов онлайн
-
-👨‍👩‍👧 Пока ребёнок учится — у вас есть время на себя!
-
-✅ *Формат:*  
-Возраст: 13–16 лет  
-12 занятий × 1.5 ч, 2 раза в неделю  
-💶 Стоимость: *264 €* за курс  
-👥 Мини-группа = максимум практики  
-🗓 *Старт:* 1 июля 2025  
-📍 *Локация:* Пилайте  
-⏳ Мест ограничено!
-
-📩 Нажмите кнопку ниже, чтобы записаться или узнать подробности.
-"""
+course_text = """ ... твой текст курса ... """
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [[InlineKeyboardButton("Хочу на курс", callback_data="sign_up")]]
@@ -61,13 +34,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = query.from_user
     username = user.username or f"id:{user.id}"
 
-    # Ответ пользователю
     await query.edit_message_text(
         text=f"✅ Спасибо за интерес! Можете написать мне 👉 [@IT_StepUp](https://t.me/IT_StepUp)",
         parse_mode='MarkdownV2'
     )
 
-    # Уведомление админу
     await context.bot.send_message(
         chat_id=ADMIN_CHAT_ID,
         text=f"✉️ Новый запрос от @{username} ({user.first_name}) хочет на курс!"
@@ -78,8 +49,11 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
 
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=PORT,
-        webhook_url=f"https://{HOST}/webhook"
-    )
+    if HOST == "localhost":
+        app.run_polling()
+    else:
+        app.run_webhook(
+            listen="0.0.0.0",
+            port=PORT,
+            webhook_url=f"https://{HOST}/webhook"
+        )
