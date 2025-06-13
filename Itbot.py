@@ -4,8 +4,9 @@ from telegram.ext import (
     ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 )
 
-TOKEN = os.environ.get("8121925945:AAGzK-Xj4ubzBQoxAoC0YwOZq-ejkDXzmlw")
-ADMIN_CHAT_ID = os.environ.get("IT_StepUp")  # твой Telegram user ID
+TOKEN = os.environ.get("BOT_TOKEN")  # переменная окружения с токеном
+ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")  # ID администратора
+ # твой Telegram user ID
 PORT = int(os.environ.get("PORT", "8443"))
 
 course_text = """
