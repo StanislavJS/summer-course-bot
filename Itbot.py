@@ -5,17 +5,21 @@ from telegram.ext import (
     ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 )
 
-# Загрузка переменных окружения из .env
+# Загружаем переменные из .env (если есть)
 load_dotenv()
 
-# Получение переменных
 TOKEN = os.environ.get("BOT_TOKEN")
-ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")
+ADMIN_CHAT_ID = int(os.environ.get("ADMIN_CHAT_ID"))
 PORT = int(os.environ.get("PORT", "8443"))
-HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
 
-# Проверка хоста
-if not HOST or '\n' in HOST or ' ' in HOST:
+# Получаем хост для webhook — на Render он выставляется автоматически,
+# для локальной отладки можно указать localhost
+HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
+if not HOST:
+    HOST = "localhost"  # Для локального запуска
+
+# Проверка на некорректные символы в HOST
+if '\n' in HOST or ' ' in HOST:
     raise ValueError(f"❌ Некорректный HOST: '{HOST}'")
 
 print(f"✅ Webhook URL: https://{HOST}/webhook")
@@ -60,7 +64,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Ответ пользователю
     await query.edit_message_text(
         text=f"✅ Спасибо за интерес! Можете написать мне 👉 [@IT_StepUp](https://t.me/IT_StepUp)",
-        parse_mode='Markdown'
+        parse_mode='MarkdownV2'
     )
 
     # Уведомление админу
