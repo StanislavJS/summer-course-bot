@@ -1,12 +1,17 @@
 import os
+from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 )
 
-TOKEN = os.environ.get("BOT_TOKEN")  # переменная окружения с токеном
+# Загружаем переменные окружения из .env
+load_dotenv()
+
+TOKEN = os.environ.get("BOT_TOKEN")  # токен бота
 ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")  # ID администратора
-PORT = int(os.environ.get("PORT", "8443"))
+PORT = int(os.environ.get("PORT", "8443"))  # порт для webhook
+HOST = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '').strip()  # хост для webhook
 
 course_text = """
 🚀 *Летний курс по веб-разработке для подростков (13–16 лет)*  
@@ -55,14 +60,16 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Уведомление админу
     await context.bot.send_message(
-        chat_id=ADMIN_CHAT_ID,
+        chat_id=int(ADMIN_CHAT_ID),
         text=f"✉️ Новый запрос от @{username} ({user.first_name}) хочет на курс!"
     )
 
-
 if __name__ == '__main__':
-    host = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '').strip()
-    print(f"RENDER_EXTERNAL_HOSTNAME: '{host}'")  # вывод для отладки
+    if not all([TOKEN, ADMIN_CHAT_ID, HOST]):
+        print("Ошибка: не заданы все обязательные переменные окружения (BOT_TOKEN, ADMIN_CHAT_ID, RENDER_EXTERNAL_HOSTNAME)")
+        exit(1)
+
+    print(f"RENDER_EXTERNAL_HOSTNAME: '{HOST}'")  # отладка
 
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
@@ -71,5 +78,5 @@ if __name__ == '__main__':
     app.run_webhook(
         listen="0.0.0.0",
         port=PORT,
-        webhook_url=f"https://{host}/webhook"
+        webhook_url=f"https://{HOST}/webhook"
     )
