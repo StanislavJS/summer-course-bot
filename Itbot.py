@@ -5,13 +5,20 @@ from telegram.ext import (
     ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 )
 
-# Загружаем переменные окружения из .env
+# Загрузка переменных окружения из .env
 load_dotenv()
 
-TOKEN = os.environ.get("BOT_TOKEN")  # токен бота
-ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")  # ID администратора
-PORT = int(os.environ.get("PORT", "8443"))  # порт для webhook
-HOST = os.environ.get('RENDER_EXTERNAL_HOSTNAME', '').strip()  # хост для webhook
+# Получение переменных
+TOKEN = os.environ.get("BOT_TOKEN")
+ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID")
+PORT = int(os.environ.get("PORT", "8443"))
+HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
+
+# Проверка хоста
+if not HOST or '\n' in HOST or ' ' in HOST:
+    raise ValueError(f"❌ Некорректный HOST: '{HOST}'")
+
+print(f"✅ Webhook URL: https://{HOST}/webhook")
 
 course_text = """
 🚀 *Летний курс по веб-разработке для подростков (13–16 лет)*  
@@ -39,9 +46,7 @@ course_text = """
 """
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        [InlineKeyboardButton("Хочу на курс", callback_data="sign_up")]
-    ]
+    keyboard = [[InlineKeyboardButton("Хочу на курс", callback_data="sign_up")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_markdown_v2(course_text, reply_markup=reply_markup)
 
@@ -52,7 +57,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = query.from_user
     username = user.username or f"id:{user.id}"
 
-    # Сообщение пользователю
+    # Ответ пользователю
     await query.edit_message_text(
         text=f"✅ Спасибо за интерес! Можете написать мне 👉 [@IT_StepUp](https://t.me/IT_StepUp)",
         parse_mode='Markdown'
@@ -60,17 +65,11 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Уведомление админу
     await context.bot.send_message(
-        chat_id=int(ADMIN_CHAT_ID),
+        chat_id=ADMIN_CHAT_ID,
         text=f"✉️ Новый запрос от @{username} ({user.first_name}) хочет на курс!"
     )
 
 if __name__ == '__main__':
-    if not all([TOKEN, ADMIN_CHAT_ID, HOST]):
-        print("Ошибка: не заданы все обязательные переменные окружения (BOT_TOKEN, ADMIN_CHAT_ID, RENDER_EXTERNAL_HOSTNAME)")
-        exit(1)
-
-    print(f"RENDER_EXTERNAL_HOSTNAME: '{HOST}'")  # отладка
-
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
