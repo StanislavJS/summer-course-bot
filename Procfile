@@ -1,1 +1,2 @@
-python itbot.py
+python Itbot.py
+
